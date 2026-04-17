@@ -168,6 +168,9 @@ func (c *Client) VerifyOffline(token string, publicKeyBase64 string, domain stri
 
 // ListLicenses returns all licenses for the authenticated user.
 func (c *Client) ListLicenses() ([]License, error) {
+	if err := c.RequireApiKey(); err != nil {
+		return nil, err
+	}
 	var result LicenseListResponse
 	if err := c.doRequest("GET", "/portal/licenses", nil, &result); err != nil {
 		return nil, err
@@ -177,6 +180,9 @@ func (c *Client) ListLicenses() ([]License, error) {
 
 // CreateLicense creates a new license.
 func (c *Client) CreateLicense(appName, domain, planID string) (*License, error) {
+	if err := c.RequireApiKey(); err != nil {
+		return nil, err
+	}
 	body := CreateLicenseRequest{AppName: appName, Domain: domain, PlanID: planID}
 	var result License
 	if err := c.doRequest("POST", "/portal/licenses", body, &result); err != nil {
@@ -255,7 +261,10 @@ func (c *Client) HealthCheck() (*HealthResponse, error) {
 // ── Analytics & SLA ────────────────────────────────────────────────────────
 
 // GetAnalytics returns detailed analytics for the specified number of days.
-func (c *Client) GetAnalytics(days int) (map[string]interface{}, error) {
+func (c *Client) GetAnalytics(days int) (map[string]interface{
+	if err := c.RequireApiKey(); err != nil {
+		return nil, err
+	}}, error) {
 	var result map[string]interface{}
 	if err := c.doRequest("GET", fmt.Sprintf("/portal/analytics?days=%d", days), nil, &result); err != nil {
 		return nil, err

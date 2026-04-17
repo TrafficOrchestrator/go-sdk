@@ -1,137 +1,79 @@
-# @traffic-orchestrator/go-sdk
+# Traffic Orchestrator — Go SDK
 
-Official Go SDK for [Traffic Orchestrator](https://trafficorchestrator.com) â€” license validation, management, and analytics.
+[![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://pkg.go.dev/github.com/TrafficOrchestrator/go-sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
 
-ðŸ“– [API Reference](https://trafficorchestrator.com/docs#api) Â· [SDK Guides](https://trafficorchestrator.com/docs/sdk/go) Â· [OpenAPI Spec](https://api.trafficorchestrator.com/api/v1/openapi.json)
+**Enterprise-grade software licensing, edge validation, and API management.** Protect and monetize your applications with domain-bound license keys, offline verification, and real-time analytics — powered by 300+ edge locations worldwide.
 
-## Install
+---
+
+## Quickstart (3 steps, 60 seconds)
+
+### 1. Create your free account
+
+> **[Sign up at trafficorchestrator.com](https://trafficorchestrator.com/register)** — no credit card required. Free tier includes 5 licenses and 10,000 validations/month.
+
+### 2. Get your API key
+
+> Go to **[Dashboard ? API Keys](https://trafficorchestrator.com/dashboard/keys)** and generate a Sandbox or Live key.
+
+### 3. Install and validate
 
 ```bash
-go get github.com/Traffic-Orchestrator/TO/packages/go-sdk
+go get github.com/TrafficOrchestrator/go-sdk
 ```
-
-## Quick Start
 
 ```go
-package main
+import to "github.com/TrafficOrchestrator/go-sdk"
 
-import (
-    "context"
-    "fmt"
-    to "github.com/Traffic-Orchestrator/TO/packages/go-sdk"
-)
-
-func main() {
-    client := to.NewClient()
-
-    result, err := client.ValidateLicense(context.Background(), "LK-xxxx-xxxx-xxxx", "example.com")
-    if err != nil {
-        panic(err)
-    }
-
-    if result.Valid {
-        fmt.Printf("License active, plan: %s\n", result.PlanID)
-    }
-}
+client := to.NewClient("sk_live_your_key_here")
+result, _ := client.Validate("LK-xxxx-xxxx-xxxx", "yourdomain.com")
+fmt.Println(result.Valid)
 ```
 
-## API Methods
+**That's it.** Your application is now license-protected.
 
-### Core License Operations
+---
 
-| Method | Auth | Description |
-| --- | --- | --- |
-| `ValidateLicense(ctx, token, domain)` | No | Validate a license key |
-| `VerifyOffline(token, publicKey, domain)` | No | Ed25519 offline verification |
-| `ListLicenses(ctx)` | Yes | List all licenses |
-| `CreateLicense(ctx, opts)` | Yes | Create a new license |
-| `RotateLicense(ctx, licenseID)` | Yes | Rotate license key |
-| `DeleteLicense(ctx, licenseID)` | Yes | Revoke a license |
-| `GetUsage(ctx)` | Yes | Get usage statistics |
-| `GetAnalytics(ctx, days)` | Yes | Get detailed analytics |
-| `HealthCheck(ctx)` | No | Check API health |
+## Why Traffic Orchestrator?
 
-### Portal & Enterprise Methods
+| Feature | Description |
+|---------|-------------|
+| **Domain-Bound Licensing** | SHA-256 validated keys tied to specific domains — no key sharing |
+| **Edge Validation** | Sub-10ms license checks from 300+ global edge locations |
+| **Offline Mode** | Ed25519 signed JWT tokens for air-gapped and offline environments |
+| **Grace Period** | Configurable fallback keeps your app running during API outages |
+| **Real-Time Analytics** | Track activations, usage patterns, and revenue in your dashboard |
+| **Multi-Language** | Official SDKs for 12 languages — same API, consistent behavior |
 
-| Method | Auth | Description |
-| --- | --- | --- |
-| `AddDomain(ctx, licenseID, domain)` | Yes | Add domain to license |
-| `RemoveDomain(ctx, licenseID, domain)` | Yes | Remove domain from license |
-| `GetDomains(ctx, licenseID)` | Yes | Get license domains |
-| `UpdateLicenseStatus(ctx, id, status)` | Yes | Suspend/reactivate license |
-| `ListAPIKeys(ctx)` | Yes | List API keys |
-| `CreateAPIKey(ctx, name, scopes)` | Yes | Create API key |
-| `DeleteAPIKey(ctx, keyID)` | Yes | Delete API key |
-| `GetDashboard(ctx)` | Yes | Full dashboard overview |
+## Features
 
-## Context Support
+- **License Validation** — Validate license keys against domains with cryptographic proof
+- **License Management** — Create, update, suspend, revoke, and rotate license keys
+- **Offline Verification** — Verify Ed25519-signed JWT tokens without an API call
+- **Webhooks** — Real-time notifications for license events (activation, expiry, revocation)
+- **Analytics & SLA Monitoring** — Track validation performance and uptime metrics
 
-All methods accept `context.Context` for timeouts and cancellation:
+## Documentation
 
-```go
-ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-defer cancel()
+- ?? **[Full API Reference](https://trafficorchestrator.com/docs/api)**
+- ?? **[Quickstart Guides](https://trafficorchestrator.com/docs/quickstart)**
+- ?? **[Integration Examples](https://trafficorchestrator.com/docs/examples)**
 
-result, err := client.ValidateLicense(ctx, token, domain)
-```
+## Support
 
-## Connection Pooling
-
-```go
-client := to.NewClient(
-    to.WithAPIKey(os.Getenv("TO_API_KEY")),
-    to.WithMaxIdleConns(10),
-    to.WithTimeout(5 * time.Second),
-    to.WithRetries(3),
-)
-```
-
-## Multi-Environment
-
-```go
-// Production (default)
-client := to.NewClient(to.WithAPIKey(os.Getenv("TO_API_KEY")))
-
-// Staging
-client := to.NewClient(
-    to.WithAPIKey(os.Getenv("TO_API_KEY_DEV")),
-    to.WithBaseURL("https://api-staging.trafficorchestrator.com/api/v1"),
-)
-```
-
-## Error Handling
-
-```go
-result, err := client.ValidateLicense(ctx, token, domain)
-if err != nil {
-    var apiErr *to.APIError
-    if errors.As(err, &apiErr) {
-        fmt.Printf("API error: %s (code: %s, status: %d)\n", apiErr.Message, apiErr.Code, apiErr.Status)
-    }
-}
-```
-
-## Offline Verification (Enterprise)
-
-Enterprise licenses are signed JWTs verified without network access using Ed25519:
-
-```go
-pubKeyB64 := os.Getenv("TO_PUBLIC_KEY") // base64-encoded Ed25519 public key
-
-result, err := client.VerifyOffline(licenseToken, pubKeyB64, "example.com")
-if err != nil {
-    log.Fatal(err)
-}
-
-if result.Valid {
-    fmt.Printf("Plan: %s, Expires: %s\n", result.PlanID, result.ExpiresAt)
-}
-```
-
-## Requirements
-
-- Go 1.21+
+- ?? [Report an Issue](https://github.com/TrafficOrchestrator/go-sdk/issues)
+- ?? [Email Support](mailto:support@trafficorchestrator.com)
+- ?? [Knowledge Base](https://trafficorchestrator.com/docs)
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+  <a href="https://trafficorchestrator.com"><strong>trafficorchestrator.com</strong></a> · 
+  <a href="https://trafficorchestrator.com/register">Get Started Free</a> · 
+  <a href="https://trafficorchestrator.com/docs">Docs</a>
+</p>
