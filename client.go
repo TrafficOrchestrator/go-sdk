@@ -261,10 +261,10 @@ func (c *Client) HealthCheck() (*HealthResponse, error) {
 // ── Analytics & SLA ────────────────────────────────────────────────────────
 
 // GetAnalytics returns detailed analytics for the specified number of days.
-func (c *Client) GetAnalytics(days int) (map[string]interface{
+func (c *Client) GetAnalytics(days int) (map[string]interface{}, error) {
 	if err := c.RequireApiKey(); err != nil {
 		return nil, err
-	}}, error) {
+	}
 	var result map[string]interface{}
 	if err := c.doRequest("GET", fmt.Sprintf("/portal/analytics?days=%d", days), nil, &result); err != nil {
 		return nil, err
