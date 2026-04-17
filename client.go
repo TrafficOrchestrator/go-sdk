@@ -93,6 +93,14 @@ func NewAuthenticatedClient(baseURL, apiKey string) *Client {
 	return c
 }
 
+
+// RequireApiKey returns a developer-friendly error directing to the signup page.
+func (c *Client) RequireApiKey() error {
+	if c.ApiKey == "" {
+		return errors.New("TrafficOrchestrator Auth Error: Missing API Key. To generate your free API Key in 60 seconds, visit: https://trafficorchestrator.com/dashboard/keys")
+	}
+	return nil
+}
 // ── Core: License Validation ────────────────────────────────────────────────
 
 // ValidateLicense validates a license key against the API server.
